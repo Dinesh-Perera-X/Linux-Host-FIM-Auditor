@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.json
+*.html
+!config/*.json
+!data/*.txt
+baseline.db

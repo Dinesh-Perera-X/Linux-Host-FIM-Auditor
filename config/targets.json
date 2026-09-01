@@ -1,0 +1,15 @@
+{
+  "monitored_files": [
+    "/etc/passwd",
+    "/etc/shadow",
+    "/etc/group",
+    "/etc/sudoers",
+    "/etc/ssh/sshd_config",
+    "/etc/crontab",
+    "/etc/hosts"
+  ],
+  "monitored_directories": [
+    "/etc/cron.d",
+    "/etc/sudoers.d"
+  ]
+}
