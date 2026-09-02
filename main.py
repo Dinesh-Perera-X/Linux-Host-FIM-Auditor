@@ -7,6 +7,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from core.hasher import IntegrityHasher
+from core.scanner import IntegrityScanner
 
 console = Console()
 
@@ -54,9 +55,41 @@ def generate_baseline(targets, output_db: str = "baseline.db"):
     console.print(table)
     console.print(f"\n[bold green]✔ Baseline Snapshot Stored:[/bold green] [cyan]{output_db}[/cyan] ({len(baseline_records)} assets cataloged)")
 
+def perform_scan(targets, database_path: str = "baseline.db"):
+    if not os.path.exists(database_path):
+        console.print(f"[red][!] Error: Baseline database '{database_path}' not found. Run with --init first.[/red]")
+        sys.exit(1)
+
+    scanner = IntegrityScanner(baseline_db_path=database_path)
+    console.print("[*] Running comparative filesystem integrity audit against baseline database...\n")
+    findings = scanner.run_scan(targets)
+
+    if not findings:
+        console.print(Panel("[bold green]✔ SYSTEM INTEGRITY VERIFIED[/bold green]\nNo unauthorized content drifts, checksum mismatches, or permission modifications detected across monitored assets.", border_style="green"))
+    else:
+        table = Table(title="[bold red]🚨 File Integrity Violations & Drifts Detected[/bold red]", border_style="red")
+        table.add_column("Target Asset", style="white")
+        table.add_column("Drift Type", justify="center", style="magenta")
+        table.add_column("Severity", justify="center")
+        table.add_column("Forensic Anomaly Details", style="yellow")
+
+        for f in findings:
+            sev = f["severity"]
+            sev_str = f"[bold red]{sev}[/bold red]" if sev == "CRITICAL" else f"[bold yellow]{sev}[/bold yellow]"
+            table.add_row(
+                f["filepath"],
+                f["event_type"],
+                sev_str,
+                f["description"]
+            )
+        console.print(table)
+
+    console.print("\n[bold green]✔ Day 2 Complete:[/bold green] Differential integrity scan and tamper drift engine operational.")
+
 def main():
     parser = argparse.ArgumentParser(description="Linux Host File Integrity Monitor (FIM).")
     parser.add_argument("--init", action="store_true", help="Initialize and generate a fresh cryptographic baseline snapshot")
+    parser.add_argument("--scan", action="store_true", help="Run differential integrity audit against baseline")
     parser.add_argument("-c", "--config", help="Path to monitored targets configuration", default="config/targets.json")
     parser.add_argument("-db", "--database", help="Path to store baseline database", default="baseline.db")
     args = parser.parse_args()
@@ -64,11 +97,12 @@ def main():
     display_banner()
     targets = load_config(args.config)
 
-    if args.init or not os.path.exists(args.database):
+    if args.init:
         generate_baseline(targets, args.database)
-        console.print("\n[bold green]✔ Day 1 Complete:[/bold green] Cryptographic baseline and POSIX permission indexer operational.")
+    elif args.scan:
+        perform_scan(targets, args.database)
     else:
-        console.print(f"[*] Baseline database found at [cyan]{args.database}[/cyan]. Ready for Day 2 comparison engine.")
+        perform_scan(targets, args.database)
 
 if __name__ == "__main__":
     main()
