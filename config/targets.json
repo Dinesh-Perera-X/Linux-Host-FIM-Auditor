@@ -1,15 +1,11 @@
 {
   "monitored_files": [
     "/etc/passwd",
-    "/etc/shadow",
+    "/etc/hosts",
     "/etc/group",
-    "/etc/sudoers",
-    "/etc/ssh/sshd_config",
-    "/etc/crontab",
-    "/etc/hosts"
+    "data/test_target.txt"
   ],
   "monitored_directories": [
-    "/etc/cron.d",
-    "/etc/sudoers.d"
+    "data"
   ]
 }

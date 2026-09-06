@@ -8,19 +8,20 @@ from rich.table import Table
 
 from core.hasher import IntegrityHasher
 from core.scanner import IntegrityScanner
+from watchers.monitor import RealtimeMonitor
 
 console = Console()
 
 def display_banner():
     banner = (
         "[bold cyan]Linux Host File Integrity Monitor (FIM) & System Auditor 🛡️🐧[/bold cyan]\n"
-        "[dim]Host-Based Intrusion Detection & Baseline Tamper Detection Engine[/dim]"
+        "[dim]Host-Based Intrusion Detection & Real-Time Tamper Watcher[/dim]"
     )
     console.print(Panel.fit(banner, border_style="cyan"))
 
 def load_config(config_path: str = "config/targets.json"):
     if not os.path.exists(config_path):
-        return {"monitored_files": ["/etc/passwd", "/etc/hosts", "/etc/group"], "monitored_directories": []}
+        return {"monitored_files": ["/etc/passwd", "/etc/hosts"], "monitored_directories": ["data"]}
     with open(config_path, "r") as f:
         return json.load(f)
 
@@ -84,12 +85,11 @@ def perform_scan(targets, database_path: str = "baseline.db"):
             )
         console.print(table)
 
-    console.print("\n[bold green]✔ Day 2 Complete:[/bold green] Differential integrity scan and tamper drift engine operational.")
-
 def main():
     parser = argparse.ArgumentParser(description="Linux Host File Integrity Monitor (FIM).")
     parser.add_argument("--init", action="store_true", help="Initialize and generate a fresh cryptographic baseline snapshot")
     parser.add_argument("--scan", action="store_true", help="Run differential integrity audit against baseline")
+    parser.add_argument("--watch", action="store_true", help="Launch live real-time watchdog filesystem monitor")
     parser.add_argument("-c", "--config", help="Path to monitored targets configuration", default="config/targets.json")
     parser.add_argument("-db", "--database", help="Path to store baseline database", default="baseline.db")
     args = parser.parse_args()
@@ -99,8 +99,9 @@ def main():
 
     if args.init:
         generate_baseline(targets, args.database)
-    elif args.scan:
-        perform_scan(targets, args.database)
+    elif args.watch:
+        monitor = RealtimeMonitor(targets)
+        monitor.start()
     else:
         perform_scan(targets, args.database)
 
