@@ -68,20 +68,25 @@ def perform_scan(targets, database_path: str = "baseline.db"):
     if not findings:
         console.print(Panel("[bold green]✔ SYSTEM INTEGRITY VERIFIED[/bold green]\nNo unauthorized content drifts, checksum mismatches, or permission modifications detected across monitored assets.", border_style="green"))
     else:
-        table = Table(title="[bold red]🚨 File Integrity Violations & Drifts Detected[/bold red]", border_style="red")
+        table = Table(title="[bold red]🚨 File Integrity Violations & MITRE ATT&CK Attribution[/bold red]", border_style="red")
         table.add_column("Target Asset", style="white")
         table.add_column("Drift Type", justify="center", style="magenta")
+        table.add_column("MITRE ID", justify="center", style="cyan")
+        table.add_column("Tactic", justify="center", style="yellow")
         table.add_column("Severity", justify="center")
-        table.add_column("Forensic Anomaly Details", style="yellow")
+        table.add_column("Recommended SOC Action", style="green")
 
         for f in findings:
             sev = f["severity"]
             sev_str = f"[bold red]{sev}[/bold red]" if sev == "CRITICAL" else f"[bold yellow]{sev}[/bold yellow]"
+            threat = f.get("threat", {})
             table.add_row(
                 f["filepath"],
                 f["event_type"],
+                threat.get("technique_id", "N/A"),
+                threat.get("tactic", "N/A"),
                 sev_str,
-                f["description"]
+                threat.get("soc_action", "Investigate immediately")
             )
         console.print(table)
 
