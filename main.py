@@ -9,6 +9,7 @@ from rich.table import Table
 from core.hasher import IntegrityHasher
 from core.scanner import IntegrityScanner
 from watchers.monitor import RealtimeMonitor
+from reports.reporter import FIMReporter
 
 console = Console()
 
@@ -56,7 +57,7 @@ def generate_baseline(targets, output_db: str = "baseline.db"):
     console.print(table)
     console.print(f"\n[bold green]✔ Baseline Snapshot Stored:[/bold green] [cyan]{output_db}[/cyan] ({len(baseline_records)} assets cataloged)")
 
-def perform_scan(targets, database_path: str = "baseline.db"):
+def perform_scan(targets, database_path: str = "baseline.db", json_out: str = None, html_out: str = None):
     if not os.path.exists(database_path):
         console.print(f"[red][!] Error: Baseline database '{database_path}' not found. Run with --init first.[/red]")
         sys.exit(1)
@@ -90,11 +91,20 @@ def perform_scan(targets, database_path: str = "baseline.db"):
             )
         console.print(table)
 
+    if json_out:
+        FIMReporter.export_json(findings, json_out)
+        console.print(f"[green]✔ Structured JSON SIEM Telemetry Exported:[/green] [cyan]{json_out}[/cyan]")
+    if html_out:
+        FIMReporter.export_html(findings, html_out)
+        console.print(f"[green]✔ Forensic HTML Incident Dossier Exported:[/green] [cyan]{html_out}[/cyan]")
+
 def main():
     parser = argparse.ArgumentParser(description="Linux Host File Integrity Monitor (FIM).")
     parser.add_argument("--init", action="store_true", help="Initialize and generate a fresh cryptographic baseline snapshot")
     parser.add_argument("--scan", action="store_true", help="Run differential integrity audit against baseline")
     parser.add_argument("--watch", action="store_true", help="Launch live real-time watchdog filesystem monitor")
+    parser.add_argument("--json", help="Export findings to JSON file", default="fim_audit_report.json")
+    parser.add_argument("--html", help="Export findings to HTML forensic dossier", default="fim_forensic_dossier.html")
     parser.add_argument("-c", "--config", help="Path to monitored targets configuration", default="config/targets.json")
     parser.add_argument("-db", "--database", help="Path to store baseline database", default="baseline.db")
     args = parser.parse_args()
@@ -108,7 +118,7 @@ def main():
         monitor = RealtimeMonitor(targets)
         monitor.start()
     else:
-        perform_scan(targets, args.database)
+        perform_scan(targets, args.database, json_out=args.json, html_out=args.html)
 
 if __name__ == "__main__":
     main()

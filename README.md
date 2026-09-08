@@ -10,7 +10,7 @@ A lightweight Host-Based Intrusion Detection System (HIDS) built in Python to mo
 - [x] **Day 2: Drift Detection Engine (Checksum, Permission, & Inode Tamper Scanner)**
 - [x] **Day 3: Real-Time Event Watcher (`watchdog` / `inotify` Live Tamper Monitor)**
 - [x] **Day 4: Threat Classification Engine (MITRE ATT&CK Privilege Escalation & Persistence)**
-- [ ] **Day 5: Interactive Terminal Dashboard, SIEM Alert Exporter & HTML Forensic Report**
+- [x] **Day 5: Interactive Terminal Dashboard, SIEM Alert Exporter & HTML Forensic Report**
 
 ---
 
